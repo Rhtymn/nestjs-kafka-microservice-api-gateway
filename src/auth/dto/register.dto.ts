@@ -1,4 +1,3 @@
-import { RegisterRequest } from '@app/interface/auth';
 import {
   IsEmail,
   IsNotEmpty,
@@ -7,7 +6,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class RegisterRequestDto implements RegisterRequest {
+export class RegisterRequestDto {
   @IsNotEmpty()
   @IsEmail()
   @MaxLength(50)
