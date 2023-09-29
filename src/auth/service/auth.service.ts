@@ -1,27 +1,30 @@
 import { Injectable, HttpStatus, Inject, OnModuleInit } from '@nestjs/common';
-import { RegisterRequestDto } from '../dto/register.dto';
+
 import { AUTH_SERVICE_CLIENT } from '@app/constants';
 import { ClientKafka } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import {
   LoginResponse,
+  RegisterRequest,
   RegisterResponse,
   ValidateTokenResponse,
 } from '@app/interface/auth';
 import { LoginRequestDto } from '../dto/login.dto';
 import { ValidateTokenRequestDto } from '../dto/validate-token.dto';
+import { RegisterRequestEvent } from '../event/register-request.event';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   @Inject(AUTH_SERVICE_CLIENT)
   private readonly authClient: ClientKafka;
 
-  async register(
-    registerRequest: RegisterRequestDto,
-  ): Promise<RegisterResponse> {
+  async register(registerRequest: RegisterRequest): Promise<RegisterResponse> {
     try {
       const res: RegisterResponse = await lastValueFrom(
-        this.authClient.send('register', registerRequest),
+        this.authClient.send(
+          'register',
+          new RegisterRequestEvent(registerRequest),
+        ),
       );
 
       return res;
@@ -68,6 +71,7 @@ export class AuthService implements OnModuleInit {
   }
 
   onModuleInit() {
+    this.authClient.connect();
     this.authClient.subscribeToResponseOf('register');
     this.authClient.subscribeToResponseOf('login');
     this.authClient.subscribeToResponseOf('validate-token');
